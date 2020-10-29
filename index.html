@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tratamiento de imágenes</title>
+
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="icon" type="image/png" href="images/icon-camera.png" />
+
+	<!--LINKS DE ESTILOS-->
+	<link href="https://fonts.googleapis.com/css2?family=Monoton&family=Oswald&family=Unica+One&display=swap" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+
+	<!--LINKS DE VUE.JS-->
+	<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+</head>
+<body>
+
+	<header id="behavior_header" class="header">
+		<div class="name_file">
+			<p v-if="view_name">Archivo: <span>{{name_file}}</span></p>
+			<button v-if="view_name" v-on:click="download">Descargar</button>
+		</div>
+
+		<div class="logo">
+			<p>Tratamiento de imágenes</p>
+		</div>
+	</header>
+
+	<div id="behavior_main_load" class="main" v-if="view_icon_loadImage">
+		
+		<input id="file"
+			class="input_upload"
+			type="file"
+			accept=".bmp, .png, .jpg"
+			ref="ref_input_file"
+			v-on:change="upload_image"
+			>
+		<label for="file"
+			class="icon_uploadimage"
+			></label>
+
+	</div>
+
+
+	<div id="behavior_main_image" class="main" v-if="view_main_images">
+		
+		<div class="left_panel">
+			<div class="category">
+				<div class="category_name">
+					<p>Operadores puntuales</p>
+				</div>
+				<ul class="category_list">
+					<li class="operator">
+						<div class="operation">
+							<p>Binarizar</p>
+							<button v-on:click="to_binary">Aplicar</button>
+						</div>
+						<div class="slider">
+							<input id="umbral_bin"
+								type="range"
+								min="0" max="255" step="1"
+								v-model:valueAsNumber="umbral_binarizado"
+								>
+							<label for="umbral_bin">{{umbral_binarizado}}</label>
+						</div>
+					</li>
+					<li class="operator">
+						<div class="operation">
+							<p>Escarlar a grises</p>
+							<button v-on:click="to_gray">Aplicar</button>
+						</div>
+					</li>
+					<li class="operator">
+						<div class="operation">
+							<p>Negar</p>
+							<button v-on:click="to_negative">Aplicar</button>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+		
+
+		<div class="images">
+			<canvas class="main_image" width="1280px" height="720px" ref="ref_canvas"></canvas>
+		</div>
+		
+	</div>
+
+	<script type="text/javascript" src="js/behavior.js"></script>
+</body>
+</html>
