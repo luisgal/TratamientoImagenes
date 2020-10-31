@@ -21,6 +21,7 @@
 		<div class="name_file">
 			<p v-if="view_name">Archivo: <span>{{name_file}}</span></p>
 			<button v-if="view_name" v-on:click="download">Descargar</button>
+			<button v-if="view_name" v-on:click="close">Cerrar imagen</button>
 		</div>
 
 		<div class="logo">
@@ -81,10 +82,9 @@
 				</ul>
 			</div>
 		</div>
-		
 
 		<div class="images">
-			<canvas class="main_image" width="1280px" height="720px" ref="ref_canvas"></canvas>
+			<canvas width="1280px" height="720px" ref="ref_canvas"></canvas>
 		</div>
 		
 	</div>

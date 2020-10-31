@@ -21,6 +21,15 @@ let behavior_header = new Vue({
 			window.document.body.appendChild( link );
 			link.click();
 			window.document.body.removeChild( link );
+		},
+
+		close: function(){
+			this.name_file = null;
+			this.view_name = false;
+
+			behavior_main_load.view_icon_loadImage = true;
+			
+			behavior_main_image.view_main_images = false;
 		}
 	}
 });
@@ -37,7 +46,10 @@ let behavior_main_image = new Vue({
 	},
 
 	methods: {
-		load_image: function(){
+		load_image: function( width, height ){
+			this.$refs.ref_canvas.width = width;
+			this.$refs.ref_canvas.height = height;
+
 			this.context = this.$refs.ref_canvas.getContext( '2d' );
 			this.context.drawImage( original_image, 0, 0 );
 		},
@@ -122,7 +134,7 @@ let behavior_main_load = new Vue({
 					original_image.name = file.name;
 					original_image.src = reader.result;
 
-					behavior_main_image.load_image();
+					behavior_main_image.load_image( original_image.width, original_image.height );
 				}
 			}
 
