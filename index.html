@@ -20,8 +20,8 @@
 	<header id="behavior_header" class="header">
 		<div class="name_file">
 			<p v-if="view_name">Archivo: <span>{{name_file}}</span></p>
-			<button v-if="view_name" v-on:click="download">Descargar</button>
-			<button v-if="view_name" v-on:click="close">Cerrar imagen</button>
+			<button v-if="view_name" v-on:click="download_image">Descargar</button>
+			<button v-if="view_name" v-on:click="close_image">Cerrar imagen</button>
 		</div>
 
 		<div class="logo">
