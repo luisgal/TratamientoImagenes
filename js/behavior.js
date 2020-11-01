@@ -10,7 +10,7 @@ let behavior_header = new Vue({
 	},
 
 	methods: {
-		download: function(){
+		download_image: function(){
 			let link = window.document.createElement( 'a' );
 			let url = behavior_main_image.$refs.ref_canvas.toDataURL();
 
@@ -23,7 +23,7 @@ let behavior_header = new Vue({
 			window.document.body.removeChild( link );
 		},
 
-		close: function(){
+		close_image: function(){
 			this.name_file = null;
 			this.view_name = false;
 
@@ -134,7 +134,9 @@ let behavior_main_load = new Vue({
 					original_image.name = file.name;
 					original_image.src = reader.result;
 
-					behavior_main_image.load_image( original_image.width, original_image.height );
+					original_image.onload = () =>{
+						behavior_main_image.load_image( original_image.width, original_image.height );
+					}
 				}
 			}
 
