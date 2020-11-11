@@ -46,7 +46,7 @@ body{
 	text-decoration: underline;
 }
 
-.name_file > button{
+.button_header{
 	width: auto;
 	height: auto;
 	margin-left: 25px;
@@ -58,14 +58,15 @@ body{
 	font-family: 'Oswald', sans-serif;
 	font-size: 15px;
 	letter-spacing: 0.5px;
+	user-select: none;
 }
 
-.name_file > button:hover{
+.button_header:hover{
 	border: 1px solid #cfc2bf;
 	box-shadow: inset 0px 0px 5px 0px rgba(207, 194, 191, 1);
 }
 
-.name_file > button:focus{
+.button_header:focus{
 	outline-color: #ff94ab;
 }
 
@@ -197,7 +198,7 @@ body{
 	text-shadow: -2px 2px 5px rgba( 0, 0, 0, 0.5 );
 }
 
-.operation > button{
+.button{
 	width: auto;
 	height: auto;
 	padding: 5px 10px;
@@ -208,14 +209,15 @@ body{
 	font-family: 'Oswald', sans-serif;
 	font-size: 15px;
 	letter-spacing: 0.5px;
+	user-select: none;
 }
 
-.operation > button:hover{
+.button:hover{
 	border: 1px solid #cfc2bf;
 	box-shadow: inset 0px 0px 5px 0px rgba(207, 194, 191, 1);
 }
 
-.operation > button:focus{
+.button:focus{
 	outline-color: #cfc2bf;
 }
 
@@ -234,6 +236,37 @@ body{
 	width: 20%;
 	text-align: center;
 	font-family: 'Oswald', sans-serif;
+}
+
+.operationFile > input[type="file"]{
+	display: none;
+}
+
+.inputs{
+	margin-top: 10px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-around;
+	text-align: center;
+	font-family: 'Oswald', sans-serif;
+}
+
+.inputs input, .inputs label{
+	width: 50px;
+	height: 17.5px;
+	margin: 0;
+	font-size: 17.5px;
+}
+
+.input_number{
+	color: #777777;
+	border: 2px solid #cfc2bf;
+	border-radius: 0px;
+}
+
+.input_number:focus{
+	outline-color: #cfc2bf;
 }
 
 /*---------- PANEL DE IMAGENES ----------*/
