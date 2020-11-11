@@ -20,8 +20,8 @@
 	<header id="behavior_header" class="header">
 		<div class="name_file">
 			<p v-if="view_name">Archivo: <span>{{name_file}}</span></p>
-			<button v-if="view_name" v-on:click="download_image">Descargar</button>
-			<button v-if="view_name" v-on:click="close_image">Cerrar imagen</button>
+			<button class="button_header" v-if="view_name" v-on:click="download_image">Descargar</button>
+			<button class="button_header" v-if="view_name" v-on:click="close_image">Cerrar imagen</button>
 		</div>
 
 		<div class="logo">
@@ -56,7 +56,7 @@
 					<li class="operator">
 						<div class="operation">
 							<p>Binarizar</p>
-							<button v-on:click="to_binary">Aplicar</button>
+							<button class="button" v-on:click="to_binary">Aplicar</button>
 						</div>
 						<div class="slider">
 							<input id="umbral_bin"
@@ -70,21 +70,148 @@
 					<li class="operator">
 						<div class="operation">
 							<p>Escarlar a grises</p>
-							<button v-on:click="to_gray">Aplicar</button>
+							<button class="button" v-on:click="to_gray">Aplicar</button>
 						</div>
 					</li>
 					<li class="operator">
 						<div class="operation">
 							<p>Negar</p>
-							<button v-on:click="to_negative">Aplicar</button>
+							<button class="button" v-on:click="to_negative">Aplicar</button>
+						</div>
+					</li>
+					<li class="operator">
+						<div class="operation operationFile">
+							<p>Sumar</p>
+							<input id="file_plus"
+								type="file" 
+								accept=".bmp, .png, .jpg, .jpeg"
+								ref="ref_second_input_file"
+								v-on:change="load_second_image">
+							<label for="file_plus" class="button">{{button_message}}</label>
+						</div>
+						<div class="inputs" v-if="view_inputs">
+							<div>
+								<label for="x_plus">X</label>
+								<input id="x_plus"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1" 
+									v-bind:min="x_min"
+									v-bind:max="x_max"
+									v-on:change="verify_number"
+									v-model="x_plus_value">
+								<label for="y_plus">Y</label>
+								<input id="y_plus"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1"
+									v-bind:min="y_min"
+									v-bind:max="y_max"
+									v-on:change="verify_number"
+									v-model="y_plus_value">
+							</div>
+							<button class="button" v-on:click="plus_images">Aplicar</button>
+						</div>
+					</li>
+					<li class="operator">
+						<div class="operation operationFile">
+							<p>Restar</p>
+						</div>
+						<div class="inputs" v-if="view_inputs">
+							<div>
+								<label for="x_subs">X</label>
+								<input id="x_subs"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1" 
+									v-bind:min="x_min"
+									v-bind:max="x_max"
+									v-on:change="verify_number"
+									v-model="x_subs_value">
+								<label for="y_subs">Y</label>
+								<input id="y_subs"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1"
+									v-bind:min="y_min"
+									v-bind:max="y_max"
+									v-on:change="verify_number"
+									v-model="y_subs_value">
+							</div>
+							<button class="button" v-on:click="substract_images">Aplicar</button>
+						</div>
+					</li>
+					<li class="operator">
+						<div class="operation operationFile">
+							<p>AND</p>
+						</div>
+						<div class="inputs" v-if="view_inputs">
+							<div>
+								<label for="x_and">X</label>
+								<input id="x_and"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1" 
+									v-bind:min="x_min"
+									v-bind:max="x_max"
+									v-on:change="verify_number"
+									v-model="x_and_value">
+								<label for="y_and">Y</label>
+								<input id="y_and"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1"
+									v-bind:min="y_min"
+									v-bind:max="y_max"
+									v-on:change="verify_number"
+									v-model="y_and_value">
+							</div>
+							<button class="button" v-on:click="and_images">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation operationFile">
+							<p>OR</p>
+						</div>
+						<div class="inputs" v-if="view_inputs">
+							<div>
+								<label for="x_or">X</label>
+								<input id="x_or"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1" 
+									v-bind:min="x_min"
+									v-bind:max="x_max"
+									v-on:change="verify_number"
+									v-model="x_or_value">
+								<label for="y_or">Y</label>
+								<input id="y_or"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1"
+									v-bind:min="y_min"
+									v-bind:max="y_max"
+									v-on:change="verify_number"
+									v-model="y_or_value">
+							</div>
+							<button class="button" v-on:click="or_images">Aplicar</button>
 						</div>
 					</li>
 				</ul>
 			</div>
 		</div>
 
-		<div class="images">
-			<canvas width="1280px" height="720px" ref="ref_canvas"></canvas>
+		<div class="images" ref="ref_main_images">
+			<canvas ref="ref_canvas"></canvas>
 		</div>
 		
 	</div>
