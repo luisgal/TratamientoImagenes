@@ -223,8 +223,7 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 		},
 
-		to_negative: function(){	// Función para obtener el negativo de la imagen
-			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+		negative: function(imageData){	// Función para obtener el negativo de la imagen
 			let pixels = imageData.data;
 			let numPixels = imageData.width * imageData.height;
 
@@ -237,6 +236,12 @@ let behavior_main_image = new Vue({
 				pixels[i*4+1] = 255 - g;	// Al valor 255 se le resta el valor del canal g
 				pixels[i*4+2] = 255 - b;	// Al valor 255 se le resta el valor del canal b
 			}
+
+			return imageData;
+		},
+
+		to_negative: function(){	// Función para obtener el negativo de la imagen
+			let imageData = this.negative(this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height ));
 
 			this.context.putImageData( imageData, 0, 0 );
 		},
@@ -269,7 +274,7 @@ let behavior_main_image = new Vue({
 
 		substract_images: function(){
 			let imageDataOriginal = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
-			let imageDataSecond = this.context2.getImageData( 0, 0, this.canvas2.width, this.canvas2.height );
+			let imageDataSecond = this.negative(this.context2.getImageData( 0, 0, this.canvas2.width, this.canvas2.height ));
 			let pixelsOriginal = imageDataOriginal.data;
 			let pixelsSecond = imageDataSecond.data;
 			let numPixelsOriginal = imageDataOriginal.width * imageDataOriginal.height;
@@ -284,9 +289,9 @@ let behavior_main_image = new Vue({
 					let indexOriginal = (original_image.width * i + j) * 4;
 					let indexSecond = (this.second_image.width * i2 + j2) * 4;
 
-					pixelsOriginal[indexOriginal] = (255/2) + ((pixelsOriginal[indexOriginal] - pixelsSecond[indexSecond]) / 2);
-					pixelsOriginal[indexOriginal+1] = (255/2) + ((pixelsOriginal[indexOriginal+1] - pixelsSecond[indexSecond+1]) / 2);
-					pixelsOriginal[indexOriginal+2] = (255/2) + ((pixelsOriginal[indexOriginal+2] - pixelsSecond[indexSecond+2]) / 2);
+					pixelsOriginal[indexOriginal] = this.and_pixel( pixelsOriginal[indexOriginal], pixelsSecond[indexSecond] );
+					pixelsOriginal[indexOriginal+1] = this.and_pixel( pixelsOriginal[indexOriginal+1], pixelsSecond[indexSecond+1] );
+					pixelsOriginal[indexOriginal+2] = this.and_pixel( pixelsOriginal[indexOriginal+2], pixelsSecond[indexSecond+2] );
 				}
 			}
 
