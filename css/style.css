@@ -141,6 +141,13 @@ body{
     box-shadow: inset 0px 0px 7.5px 0px rgba( 0, 0, 0, 1 );
 }
 
+.button_back{
+	margin: 2em 0 1.5em 0;
+
+	display: flex;
+	justify-content: center;
+}
+
 .category{
 	width: 100%;
 	height: auto;
@@ -277,7 +284,7 @@ body{
 	overflow: auto;
 }
 
-.images > canvas{
+.images > canvas, .images > div{
 	margin: 25px;
 }
 
@@ -298,4 +305,11 @@ body{
 .images::-webkit-scrollbar-thumb:hover,
 .images::-webkit-scrollbar-thumb:active{
     box-shadow: inset 0px 0px 7.5px 0px rgba(0, 0, 0, 1);
+}
+
+/*---------- HISTOGRAMA ----------*/
+
+.histogram{
+	width: 50%;
+	height: 470px;
 }
