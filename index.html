@@ -12,8 +12,10 @@
 	<link href="https://fonts.googleapis.com/css2?family=Monoton&family=Oswald&family=Unica+One&display=swap" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="css/style.css">
 
-	<!--LINKS DE VUE.JS-->
+	<!--LINK DE VUE.JS-->
 	<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+	<!--LINKS DE CANVASJS-->
+	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 </head>
 <body>
 
@@ -48,11 +50,15 @@
 	<div id="behavior_main_image" class="main" v-if="view_main_images">
 		
 		<div class="left_panel">
+			<div class="button_back" v-if="view_button_back" v-on:click="changeViewButtonBack">
+				<button class="button">Deshacer acción</button>
+			</div>
 			<div class="category">
 				<div class="category_name">
 					<p>Operadores puntuales</p>
 				</div>
 				<ul class="category_list">
+
 					<li class="operator">
 						<div class="operation">
 							<p>Binarizar</p>
@@ -67,18 +73,21 @@
 							<label for="umbral_bin">{{umbral_binarizado}}</label>
 						</div>
 					</li>
+
 					<li class="operator">
 						<div class="operation">
 							<p>Escarlar a grises</p>
 							<button class="button" v-on:click="to_gray">Aplicar</button>
 						</div>
 					</li>
+
 					<li class="operator">
 						<div class="operation">
 							<p>Negar</p>
 							<button class="button" v-on:click="to_negative">Aplicar</button>
 						</div>
 					</li>
+
 					<li class="operator">
 						<div class="operation operationFile">
 							<p>Sumar</p>
@@ -115,6 +124,7 @@
 							<button class="button" v-on:click="plus_images">Aplicar</button>
 						</div>
 					</li>
+
 					<li class="operator">
 						<div class="operation operationFile">
 							<p>Restar</p>
@@ -145,6 +155,7 @@
 							<button class="button" v-on:click="substract_images">Aplicar</button>
 						</div>
 					</li>
+
 					<li class="operator">
 						<div class="operation operationFile">
 							<p>AND</p>
@@ -208,10 +219,161 @@
 					</li>
 				</ul>
 			</div>
+
+
+			<div class="category">
+				<div class="category_name">
+					<p>Operadores de histograma</p>
+				</div>
+				<ul class="category_list">
+
+					<li class="operator">
+						<div class="operation">
+							<p>Desplazamiento</p>
+						</div>
+						<div class="inputs">
+							<div>
+								<label for="const_histogram">Constante</label>
+								<input id="const_histogram"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1"
+									min="-255"
+									max="255"
+									v-model="const_value">
+							</div>
+							<button class="button" v-on:click="displace_histogram">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Expansión</p>
+						</div>
+						<div class="inputs">
+							<div>
+								<label for="exp_max">Max</label>
+								<input id="exp_max"
+									type="number"
+									class="input_number"
+									value="255"
+									step="1"
+									min="0"
+									max="255"
+									v-model="exp_max_value"
+									v-on:change="verify_expand_numbers_histogram"
+									disabled>
+								<label for="exp_min">Min</label>
+								<input id="exp_min"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1"
+									min="0" 
+									max="255"
+									v-model="exp_min_value"
+									v-on:change="verify_expand_numbers_histogram"
+									disabled>
+							</div>
+							<button class="button" v-on:click="expand_histogram">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Contracción</p>
+						</div>
+						<div class="inputs">
+							<div>
+								<label for="cont_max">Max</label>
+								<input id="cont_max"
+									type="number"
+									class="input_number"
+									value="255"
+									step="1"
+									min="0"
+									max="255"
+									v-model="cont_max_value"
+									v-on:change="verify_contract_numbers_histogram">
+								<label for="cont_min">Min</label>
+								<input id="cont_min"
+									type="number"
+									class="input_number"
+									value="0"
+									step="1"
+									min="0" 
+									max="255"
+									v-model="cont_min_value"
+									v-on:change="verify_contract_numbers_histogram">
+							</div>
+							<button class="button" v-on:click="contract_histogram">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Ecualización Uniforme</p>
+							<button class="button" v-on:click="uniform">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Ecualización Rayleigh</p>
+						</div>
+						<div class="inputs">
+							<div>
+								<label for="alpha_ray">alpha</label>
+								<input id="alpha_ray"
+									type="number"
+									class="input_number"
+									value="255"
+									step="0.1"
+									min="0"
+									max="5"
+									v-model="alpha_ray_value"
+									v-on:change="verify_alpha_ray">
+							</div>
+							<button class="button" v-on:click="rayleigh">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Ecualización Hipercúbica</p>
+							<button class="button" v-on:click="hypercubic">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Ecualización Logaritmo hiperbólica</p>
+							<button class="button" v-on:click="log_hyperbolic">Aplicar</button>
+						</div>
+					</li>
+
+				</ul>
+			</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		</div>
 
 		<div class="images" ref="ref_main_images">
 			<canvas ref="ref_canvas"></canvas>
+			<div id="canvas_chart" class="histogram"></div>
 		</div>
 		
 	</div>
