@@ -142,7 +142,7 @@ body{
 }
 
 .button_back{
-	margin: 2em 0 1.5em 0;
+	margin: 2em 0 1em 0;
 
 	display: flex;
 	justify-content: center;
@@ -153,13 +153,8 @@ body{
 	height: auto;
 }
 
-.category:first-child{
-	padding-top: 25px;
-}
-
 .category_name{
-	padding-left: 10px;
-	padding-bottom: 10px;
+	padding: 10px 0 10px 10px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;

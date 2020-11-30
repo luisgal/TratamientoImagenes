@@ -1,10 +1,13 @@
-original_image = new Image();
+let original_image = new Image();	// Imagen principal
+
+// Datos del histograma (de los 3 canales) de la imagen principal
 let histogram = {
 	red: [],
 	green: [],
 	blue: []
 }
 
+// Seteo principal de los histogramas
 for( let i = 0; i <= 255; i++ ){
 	histogram.red.push(0);
 	histogram.green.push(0);
@@ -34,8 +37,9 @@ let behavior_header = new Vue({
 			window.document.body.removeChild( link );	// Removemos del DOM el elemento a
 		},
 
-		close_image: function(){ // Función para cerrar la imagen y volver a la vista principal
-			this.name_file = null;	// Reseteamos el nombre de la imagen
+		// Función para cerrar la imagen y resetear los datos
+		close_image: function(){
+			this.name_file = null;
 			this.view_name = false;
 
 			behavior_main_image.umbral_binarizado = 127;
@@ -117,7 +121,7 @@ let behavior_main_image = new Vue({
 			this.context = this.$refs.ref_canvas.getContext( '2d' );	// Obtenemos el contexto del canvas
 			this.context.drawImage( original_image, 0, 0 );	// Dibujamos la imagen en el canvas
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
 		load_second_image: function(){
@@ -153,7 +157,8 @@ let behavior_main_image = new Vue({
 			this.view_inputs = true;
 		},
 
-		updateHistogram: function(){
+		updateHistogram: function(){	// Función para actualizar el gráfico del histograma
+			// Se reinicia los datos del histograma
 			for( let i = 0; i <= 255; i++ ){
 				histogram.red[i] = 0;
 				histogram.green[i] = 0;
@@ -164,6 +169,7 @@ let behavior_main_image = new Vue({
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
 
+			// Se cuenta aumenta en uno la cantidad de valores con ese nivel de gris
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i*4;
 
@@ -172,6 +178,7 @@ let behavior_main_image = new Vue({
 				histogram.blue[pixels[position+2]] += 1;
 			}
 
+			// Se generan los datos para utilzarlos en el histograma de CANVASJS
 			for( let i = 0; i <= 255; i++ ){
 				let positionRed = { x: i, y: histogram.red[i] }
 				let positionGreen = { x: i, y: histogram.green[i] }
@@ -182,6 +189,7 @@ let behavior_main_image = new Vue({
 				histogram.blue[i] = positionBlue;
 			}
 
+			// Creación y seteado del gráfico del histograma (revisar documentación en canvasjs)
 			let chart = new CanvasJS.Chart("canvas_chart", {
 				animationEnabled: true,
 				theme: "light2",
@@ -242,14 +250,16 @@ let behavior_main_image = new Vue({
 				}]
 			});
 
-			chart.render();
+			chart.render();	// Renderización del gráfico
 		},
 
-		changeViewButtonBack: function(){
+		changeViewButtonBack: function(){	// Función del boton de deshacer acción
+			// Obtención de la información de la imagen principal
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;
 			let numPixels = imageData.width * imageData.height;
 
+			// Se asignan los pixeles de respaldo a la imagen principal
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i*4;
 
@@ -260,10 +270,11 @@ let behavior_main_image = new Vue({
 
 			this.context.putImageData( imageData, 0, 0 );
 
+			// Se limpian los pixeles de respaldo y se cambia la vista del boton
 			this.pixels_backup = null;
 			this.view_button_back = false;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
 		getAxesIniEnd: function( x, y ){
@@ -335,7 +346,7 @@ let behavior_main_image = new Vue({
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
 			// Se recorre pixel por pixel de la imagen cómo un arreglo en vez de matriz
 			for( let i = 0; i < numPixels; i++ ){
@@ -355,7 +366,7 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
 		to_binary: function(){	// Función para binarizar con respecto a un umbral
@@ -365,7 +376,7 @@ let behavior_main_image = new Vue({
 			let pixels = imageData.data;
 			let numPixels = imageData.width * imageData.height;
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
 			for( let i = 0; i < numPixels; i++ ){
 				// Se compara el valor del pixel con el del umbral en slider
@@ -385,7 +396,7 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
 		to_negative: function(){	// Función para obtener el negativo de la imagen
@@ -393,7 +404,7 @@ let behavior_main_image = new Vue({
 			let pixels = imageData.data;
 			let numPixels = imageData.width * imageData.height;
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
 			for( let i = 0; i < numPixels; i++ ){
 				let r = pixels[i*4];
@@ -408,10 +419,10 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		plus_images: function(){
+		plus_images: function(){	// Función para sumar dos imágenes
 			// Obtención de la información de la primer y segunda imagen
 			let imageDataOriginal = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let imageDataSecond = this.context2.getImageData( 0, 0, this.canvas2.width, this.canvas2.height );
@@ -420,7 +431,7 @@ let behavior_main_image = new Vue({
 			let numPixelsOriginal = imageDataOriginal.width * imageDataOriginal.height;
 			let numPixelsSecond = imageDataSecond.width * imageDataSecond.height;
 
-			this.pixels_backup = imageDataOriginal.data.slice();
+			this.pixels_backup = imageDataOriginal.data.slice();	// Se hace un respaldo de la información de los pixeles
 
 			// Obtención del pixel de incio y fin tanto en el eje Y cómo el eje X
 			let axes = this.getAxesIniEnd( parseInt(this.x_plus_value), parseInt(this.y_plus_value) );
@@ -443,10 +454,10 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageDataOriginal, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		substract_images: function(){
+		substract_images: function(){	// Función para restar dos imágenes
 			// Obtención de la información de la primer y segunda imagen
 			let imageDataOriginal = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let imageDataSecond = this.context2.getImageData( 0, 0, this.canvas2.width, this.canvas2.height );
@@ -455,7 +466,7 @@ let behavior_main_image = new Vue({
 			let numPixelsOriginal = imageDataOriginal.width * imageDataOriginal.height;
 			let numPixelsSecond = imageDataSecond.width * imageDataSecond.height;
 
-			this.pixels_backup = imageDataOriginal.data.slice();
+			this.pixels_backup = imageDataOriginal.data.slice();	// Se hace un respaldo de la información de los pixeles
 
 			// Obtención del pixel de incio y fin tanto en el eje Y cómo el eje X
 			let axes = this.getAxesIniEnd( parseInt(this.x_subs_value), parseInt(this.y_subs_value) );
@@ -478,7 +489,7 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageDataOriginal, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
 		and_pixel: function( pixel1, pixel2 ){
@@ -516,7 +527,7 @@ let behavior_main_image = new Vue({
 			return parseInt( pixelResul, 2 );
 		},
 
-		and_images: function(){
+		and_images: function(){	// Función para hacer la operación AND entre dos imágenes
 			// Obtención de la información de la primer y segunda imagen
 			let imageDataOriginal = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let imageDataSecond = this.context2.getImageData( 0, 0, this.canvas2.width, this.canvas2.height );
@@ -525,7 +536,7 @@ let behavior_main_image = new Vue({
 			let numPixelsOriginal = imageDataOriginal.width * imageDataOriginal.height;
 			let numPixelsSecond = imageDataSecond.width * imageDataSecond.height;
 
-			this.pixels_backup = imageDataOriginal.data.slice();
+			this.pixels_backup = imageDataOriginal.data.slice();	// Se hace un respaldo de la información de los pixeles
 
 			// Obtención del pixel de incio y fin tanto en el eje Y cómo el eje X
 			let axes = this.getAxesIniEnd( parseInt(this.x_and_value), parseInt(this.y_and_value) );
@@ -548,7 +559,7 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageDataOriginal, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
 		or_pixel: function( pixel1, pixel2 ){
@@ -586,7 +597,7 @@ let behavior_main_image = new Vue({
 			return parseInt( pixelResul, 2 );
 		},
 
-		or_images: function(){
+		or_images: function(){	// Función para hacer la operación AND entre dos imágenes
 			// Obtención de la información de la primer y segunda imagen
 			let imageDataOriginal = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let imageDataSecond = this.context2.getImageData( 0, 0, this.canvas2.width, this.canvas2.height );
@@ -595,7 +606,7 @@ let behavior_main_image = new Vue({
 			let numPixelsOriginal = imageDataOriginal.width * imageDataOriginal.height;
 			let numPixelsSecond = imageDataSecond.width * imageDataSecond.height;
 
-			this.pixels_backup = imageDataOriginal.data.slice();
+			this.pixels_backup = imageDataOriginal.data.slice();	// Se hace un respaldo de la información de los pixeles
 
 			// Obtención del pixel de incio y fin tanto en el eje Y cómo el eje X
 			let axes = this.getAxesIniEnd( parseInt(this.x_or_value), parseInt(this.y_or_value) );
@@ -618,15 +629,15 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageDataOriginal, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		displace_histogram: function(){
+		displace_histogram: function(){	// Función para desplazar el histograma una determinada constante
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
 			// Se recorre pixel por pixel de la imagen cómo un arreglo en vez de matriz
 			for( let i = 0; i < numPixels; i++ ){
@@ -662,10 +673,10 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		getMax: function( histograma ){
+		getMax: function( histograma ){	// Función para obtener el valor máximo de un histograma
 			for( let i = 255; i >= 0; i-- ){
 				if( histograma[i].y != 0 ){
 					return histograma[i].x;
@@ -673,7 +684,7 @@ let behavior_main_image = new Vue({
 			}
 		},
 
-		getMin: function( histograma ){
+		getMin: function( histograma ){	// Función para obtener el valor minimo de un histograma
 			for( let i = 0; i <= 255; i++ ){
 				if( histograma[i].y != 0 ){
 					return histograma[i].x;
@@ -689,13 +700,15 @@ let behavior_main_image = new Vue({
 			}
 		},
 
+		// Función para expandir el histograma hasta los valores máximos y mínimos posibles (255 y 0)
 		expand_histogram: function(){
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
+			// Obtención de los datos minimos y máximos de los histogramas en los 3 canales
 			let maxRed = this.getMax( histogram.red );
 			let minRed = this.getMin( histogram.red );
 			let maxGreen = this.getMax( histogram.green );
@@ -703,9 +716,11 @@ let behavior_main_image = new Vue({
 			let maxBlue = this.getMax( histogram.blue );
 			let minBlue = this.getMin( histogram.blue );
 
+			// Valores máximos y mínimos posibles (255 y 0)
 			let MAX = parseInt(this.exp_max_value);
 			let MIN = parseInt(this.exp_min_value);
 
+			// Aplicación de la formula en cada pixel y cada canal
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i * 4;
 
@@ -717,7 +732,7 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
 		verify_contract_numbers_histogram: function(){
@@ -728,13 +743,15 @@ let behavior_main_image = new Vue({
 			}
 		},
 
+		// Función para contraer el histograma hasta los valores máximos y mínimos deseados
 		contract_histogram: function(){
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
+			// Obtención de los datos minimos y máximos de los histogramas en los 3 canales
 			let maxRed = this.getMax( histogram.red );
 			let minRed = this.getMin( histogram.red );
 			let maxGreen = this.getMax( histogram.green );
@@ -742,9 +759,11 @@ let behavior_main_image = new Vue({
 			let maxBlue = this.getMax( histogram.blue );
 			let minBlue = this.getMin( histogram.blue );
 
+			// Valores máximos y mínimos deseados en la escena
 			let cmax = parseInt(this.cont_max_value);
 			let cmin = parseInt(this.cont_min_value);
 
+			// Aplicación de la formula en cada pixel y cada canal
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i * 4;
 
@@ -756,7 +775,7 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
 		verify_alpha_ray: function(){
@@ -767,6 +786,7 @@ let behavior_main_image = new Vue({
 			}
 		},
 
+		// Función para obtener la probabilidad de ocurrencia dentro de un histograma
 		getProbability: function( histograma, numPixels ){
 			let probability = [];
 
@@ -777,6 +797,7 @@ let behavior_main_image = new Vue({
 			return probability;
 		},
 
+		// Función para obtener la probabilidad acumulativa de un histograma
 		getCumulativeProbability: function( probability ){
 			let cumulativeProbability = [];
 
@@ -789,21 +810,24 @@ let behavior_main_image = new Vue({
 			return cumulativeProbability;
 		},
 
-		uniform: function(){
+		uniform: function(){	// Función de ecualización uniforme
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
+			// Obtención de las probabilidades de cada intensidad de color
 			let probabilityRed = this.getProbability( histogram.red, numPixels );
 			let probabilityGreen = this.getProbability( histogram.green, numPixels );
 			let probabilityBlue = this.getProbability( histogram.blue, numPixels );
 
+			// Obtención de las probabilidades cumulativas de cada intensidad de color
 			let cumulativeProbabilityRed = this.getCumulativeProbability( probabilityRed );
 			let cumulativeProbabilityGreen = this.getCumulativeProbability( probabilityGreen );
 			let cumulativeProbabilityBlue = this.getCumulativeProbability( probabilityBlue );
 
+			// Obtención de los datos minimos y máximos de los histogramas en los 3 canales
 			let minRed = this.getMin( histogram.red );
 			let minGreen = this.getMin( histogram.green );
 			let minBlue = this.getMin( histogram.blue );
@@ -811,6 +835,7 @@ let behavior_main_image = new Vue({
 			let maxGreen = this.getMax( histogram.green );
 			let maxBlue = this.getMax( histogram.blue );
 
+			// Aplicación de la formula en cada pixel y cada canal
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i * 4;
 
@@ -822,30 +847,35 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		rayleigh: function(){
+		rayleigh: function(){	// Función de ecualización de Rayleigh
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
+			// Obtención de las probabilidades de cada intensidad de color
 			let probabilityRed = this.getProbability( histogram.red, numPixels );
 			let probabilityGreen = this.getProbability( histogram.green, numPixels );
 			let probabilityBlue = this.getProbability( histogram.blue, numPixels );
 
+			// Obtención de las probabilidades cumulativas de cada intensidad de color
 			let cumulativeProbabilityRed = this.getCumulativeProbability( probabilityRed );
 			let cumulativeProbabilityGreen = this.getCumulativeProbability( probabilityGreen );
 			let cumulativeProbabilityBlue = this.getCumulativeProbability( probabilityBlue );
 
+			// Obtención de los datos minimos de los histogramas en los 3 canales
 			let minRed = this.getMin( histogram.red );
 			let minGreen = this.getMin( histogram.green );
 			let minBlue = this.getMin( histogram.blue );
 
+			// Valor de alfa que se considera en la formula
 			let alpha = Number( this.alpha_ray_value );
 
+			// Aplicación de la formula en cada pixel y cada canal
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i * 4;
 
@@ -857,24 +887,27 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		hypercubic: function(){
+		hypercubic: function(){	// Función de ecualización hipercúbica
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
+			// Obtención de las probabilidades de cada intensidad de color
 			let probabilityRed = this.getProbability( histogram.red, numPixels );
 			let probabilityGreen = this.getProbability( histogram.green, numPixels );
 			let probabilityBlue = this.getProbability( histogram.blue, numPixels );
 
+			// Obtención de las probabilidades cumulativas de cada intensidad de color
 			let cumulativeProbabilityRed = this.getCumulativeProbability( probabilityRed );
 			let cumulativeProbabilityGreen = this.getCumulativeProbability( probabilityGreen );
 			let cumulativeProbabilityBlue = this.getCumulativeProbability( probabilityBlue );
 
+			// Obtención de los datos minimos y máximos de los histogramas en los 3 canales
 			let minRed = this.getMin( histogram.red );
 			let minGreen = this.getMin( histogram.green );
 			let minBlue = this.getMin( histogram.blue );
@@ -882,6 +915,7 @@ let behavior_main_image = new Vue({
 			let maxGreen = this.getMax( histogram.green );
 			let maxBlue = this.getMax( histogram.blue );
 
+			// Aplicación de la formula en cada pixel y cada canal
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i * 4;
 
@@ -893,24 +927,27 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		log_hyperbolic: function(){
+		log_hyperbolic: function(){	// Función de ecualización logaritmica hiperbólica
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
 
-			this.pixels_backup = imageData.data.slice();
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
+			// Obtención de las probabilidades de cada intensidad de color
 			let probabilityRed = this.getProbability( histogram.red, numPixels );
 			let probabilityGreen = this.getProbability( histogram.green, numPixels );
 			let probabilityBlue = this.getProbability( histogram.blue, numPixels );
 
+			// Obtención de las probabilidades cumulativas de cada intensidad de color
 			let cumulativeProbabilityRed = this.getCumulativeProbability( probabilityRed );
 			let cumulativeProbabilityGreen = this.getCumulativeProbability( probabilityGreen );
 			let cumulativeProbabilityBlue = this.getCumulativeProbability( probabilityBlue );
 
+			// Obtención de los datos minimos y máximos de los histogramas en los 3 canales
 			let minRed = this.getMin( histogram.red );
 			let minGreen = this.getMin( histogram.green );
 			let minBlue = this.getMin( histogram.blue );
@@ -918,6 +955,7 @@ let behavior_main_image = new Vue({
 			let maxGreen = this.getMax( histogram.green );
 			let maxBlue = this.getMax( histogram.blue );
 
+			// Aplicación de la formula en cada pixel y cada canal
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i * 4;
 
@@ -929,7 +967,7 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
-			this.updateHistogram();
+			this.updateHistogram();	// Se actualiza el histograma
 		}
 	}
 });
