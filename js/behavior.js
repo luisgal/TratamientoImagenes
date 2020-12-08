@@ -779,9 +779,7 @@ let behavior_main_image = new Vue({
 		},
 
 		verify_alpha_ray: function(){
-			if( this.alpha_ray_value > 5 ){
-				this.alpha_ray_value = 5;
-			}else if( this.alpha_ray_value < 0 ){
+			if( this.alpha_ray_value < 0 ){
 				this.alpha_ray_value = 0;
 			}
 		},
@@ -879,9 +877,9 @@ let behavior_main_image = new Vue({
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i * 4;
 
-				pixels[position] = minRed + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 + cumulativeProbabilityRed[pixels[position]])) );
-				pixels[position+1] = minGreen + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 + cumulativeProbabilityGreen[pixels[position+1]])) );
-				pixels[position+2] = minBlue + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 + cumulativeProbabilityBlue[pixels[position+2]])) );
+				pixels[position] = minRed + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 - cumulativeProbabilityRed[pixels[position]])) );
+				pixels[position+1] = minGreen + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 - cumulativeProbabilityGreen[pixels[position+1]])) );
+				pixels[position+2] = minBlue + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 - cumulativeProbabilityBlue[pixels[position+2]])) );
 			}
 
 			this.context.putImageData( imageData, 0, 0 );
