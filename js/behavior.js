@@ -93,6 +93,7 @@ let behavior_main_image = new Vue({
 		cont_min_value: 0,
 		cont_max_value: 255,
 		alpha_ray_value: 0,
+		const_N_FPromedio: 2,
 
 		x_min: 0,
 		x_max: 0,
@@ -1059,101 +1060,70 @@ let behavior_main_image = new Vue({
 
 		//Canal 0:red 1:green 2:blue 3:alpha
 		getVecindad: function(pixels, position, width, canal, numP){
-			let vecindad = [];
-			let val = [0,0,0,0,0,0,0,0,0];
+			// Inicializar en 0 para en un futuro no duplicar 
+			let vecindad = [0,0,0,0,0,0,0,0,0];
 			let x = 0;
 
 			// Si esta sobre la parte izquierda de la imagen
 			if(position % width == canal){
-				val[0] = x;	// f(x-1,y-1)
-				val[3] = x;	// f(x,y-1)
-				val[6] = x;	// f(x+1,y-1)
-
-				val[1] = x;	// f(x-1,y)
-				val[2] = x;	// f(x-1,y+1)
-
-				val[7] = x;	// f(x+1,y)
-				val[8] = x;	// f(x+1,y+1)
-
 				// Esquina superior izquierda
 				if(position == canal){
-					val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
-					val[8] = this.valorValido(pixels,position+width+4,0,numP);	// f(x+1,y+1)
+					vecindad[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+					vecindad[8] = this.valorValido(pixels,position+width+4,0,numP);	// f(x+1,y+1)
 				}
 				// Esquina inferior izquierda
 				else if(position == numP - width + canal){
-					val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
-					val[2] = this.valorValido(pixels,position-width+4,0,numP);	// f(x-1,y+1)
+					vecindad[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+					vecindad[2] = this.valorValido(pixels,position-width+4,0,numP);	// f(x-1,y+1)
 
 				} else{
-					val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
-					val[2] = this.valorValido(pixels,position-width+4,0,numP);	// f(x-1,y+1)
+					vecindad[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+					vecindad[2] = this.valorValido(pixels,position-width+4,0,numP);	// f(x-1,y+1)
 
-					val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
-					val[8] = this.valorValido(pixels,position+width+4,0,numP);	// f(x+1,y+1)
+					vecindad[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+					vecindad[8] = this.valorValido(pixels,position+width+4,0,numP);	// f(x+1,y+1)
 				}
 
-				val[4] = this.valorValido(pixels,position,0,numP);		// f(x,y)
-				val[5] = this.valorValido(pixels,position+4,0,numP);		// f(x,y+1)
+				vecindad[4] = this.valorValido(pixels,position,0,numP);		// f(x,y)
+				vecindad[5] = this.valorValido(pixels,position+4,0,numP);		// f(x,y+1)
 			} 
 			// Si esta sobre la parte derecha de la imagen
 			else if(position % width == width - 4 + canal){
-				val[2] = x;	// f(x-1,y+1)
-				val[5] = x;	// f(x,y+1)
-				val[8] = x;	// f(x+1,y+1)
-
-				val[0] = x;	// f(x-1,y-1)
-				val[1] = x;	// f(x-1,y)
-
-				val[6] = x;	// f(x+1,y-1)
-				val[7] = x;	// f(x+1,y)
-
 				// Esquina superior derecha
 				if(position == width - 4 + canal){
-					val[6] = this.valorValido(pixels,position+width-4,0,numP);	// f(x+1,y-1)
-					val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+					vecindad[6] = this.valorValido(pixels,position+width-4,0,numP);	// f(x+1,y-1)
+					vecindad[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
 				}
 				// Esquina inferior derecha
 				else if(position == numP - 4 + canal){
-					val[0] = this.valorValido(pixels,position-width-4,0,numP);	// f(x-1,y-1)
-					val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+					vecindad[0] = this.valorValido(pixels,position-width-4,0,numP);	// f(x-1,y-1)
+					vecindad[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
 
 				} else{
-					val[0] = this.valorValido(pixels,position-width-4,0,numP);	// f(x-1,y-1)
-					val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+					vecindad[0] = this.valorValido(pixels,position-width-4,0,numP);	// f(x-1,y-1)
+					vecindad[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
 					
-					val[6] = this.valorValido(pixels,position+width-4,0,numP);	// f(x+1,y-1)
-					val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+					vecindad[6] = this.valorValido(pixels,position+width-4,0,numP);	// f(x+1,y-1)
+					vecindad[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
 				}
 
-				val[3] = this.valorValido(pixels,position-4,0,numP);		// f(x,y-1)
-				val[4] = this.valorValido(pixels,position,0,numP);		// f(x,y)
+				vecindad[3] = this.valorValido(pixels,position-4,0,numP);		// f(x,y-1)
+				vecindad[4] = this.valorValido(pixels,position,0,numP);		// f(x,y)
 			} 
 			// Si no esta en ningun borde o esquina
 			else{
-				val[0] = this.valorValido(pixels,position-width-4,0,numP);	// f(x-1,y-1)
-				val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
-				val[2] = this.valorValido(pixels,position-width+4,0,numP);	// f(x-1,y+1)
+				vecindad[0] = this.valorValido(pixels,position-width-4,0,numP);	// f(x-1,y-1)
+				vecindad[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+				vecindad[2] = this.valorValido(pixels,position-width+4,0,numP);	// f(x-1,y+1)
 				
-				val[3] = this.valorValido(pixels,position-4,0,numP);	// f(x,y-1)
-				val[4] = this.valorValido(pixels,position,0,numP);	// f(x,y)
-				val[5] = this.valorValido(pixels,position+4,0,numP);	// f(x,y+1)
+				vecindad[3] = this.valorValido(pixels,position-4,0,numP);	// f(x,y-1)
+				vecindad[4] = this.valorValido(pixels,position,0,numP);	// f(x,y)
+				vecindad[5] = this.valorValido(pixels,position+4,0,numP);	// f(x,y+1)
 				
-				val[6] = this.valorValido(pixels,position+width-4,0,numP);	// f(x+1,y-1)
-				val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
-				val[8] = this.valorValido(pixels,position+width+4,0,numP);	// f(x+1,y+1)
+				vecindad[6] = this.valorValido(pixels,position+width-4,0,numP);	// f(x+1,y-1)
+				vecindad[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+				vecindad[8] = this.valorValido(pixels,position+width+4,0,numP);	// f(x+1,y+1)
 			}
-
-			vecindad.push(val[0]);	// f(x-1,y-1)
-			vecindad.push(val[1]);	// f(x-1,y)
-			vecindad.push(val[2]);	// f(x-1,y+1)
-			vecindad.push(val[3]);	// f(x,y-1)
-			vecindad.push(val[4]);	// f(x,y)
-			vecindad.push(val[5]);	// f(x,y+1)
-			vecindad.push(val[6]);	// f(x+1,y-1)
-			vecindad.push(val[7]);	// f(x+1,y)
-			vecindad.push(val[8]);	// f(x+1,y+1)
-			
 
 			return vecindad;
 		},
@@ -1239,6 +1209,98 @@ let behavior_main_image = new Vue({
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
 
+			this.updateHistogram();	// Se actualiza el histograma			
+		},
+
+		convolucion: function(vecindad, mascara){
+			let val = 0;
+			for (var i = 0; i < vecindad.length; i++) {
+				val += vecindad[i]*mascara[i];
+			}
+			return val;
+		},
+
+		pasaBajas: function(vecindad){
+			let mascara = [1,1,1,1,1,1,1,1,1];
+			let val = Math.floor(this.convolucion(vecindad,mascara)/9);
+
+			return val;
+		},
+
+		promedioDuro: function(vecindad){
+			let mascara = [1,1,1,1,this.const_N_FPromedio,1,1,1,1];
+			let val = Math.floor(this.convolucion(vecindad,mascara)/this.const_N_FPromedio);
+
+			return val;
+		},
+
+		pasaBajasGaussiano: function(vecindad){
+			let mascara = [1,2,1,2,4,2,1,2,1];
+			let val = Math.floor(this.convolucion(vecindad,mascara)/16);
+
+			return val;
+		},
+
+		f_pasaBajas: function(){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			for( let i = 0; i < numPixels; i++ ){
+				let position = i * 4;
+
+				for (let j = 0; j < 3; j++) {
+					pixels[position + j] = this.pasaBajas(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+				}
+			}
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+			
+			this.updateHistogram();	// Se actualiza el histograma			
+		},
+
+		f_promedioDuro: function(){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			for( let i = 0; i < numPixels; i++ ){
+				let position = i * 4;
+
+				for (let j = 0; j < 3; j++) {
+					pixels[position + j] = this.promedioDuro(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+				}
+			}
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+			
+			this.updateHistogram();	// Se actualiza el histograma			
+		},
+
+		f_pasaBajasGaussiano: function(){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			for( let i = 0; i < numPixels; i++ ){
+				let position = i * 4;
+
+				for (let j = 0; j < 3; j++) {
+					pixels[position + j] = this.pasaBajasGaussiano(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+				}
+			}
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+			
 			this.updateHistogram();	// Se actualiza el histograma			
 		},
 

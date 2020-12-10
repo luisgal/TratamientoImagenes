@@ -381,6 +381,40 @@
 						</div>
 					</li>
 
+					<li class="operator">
+						<div class="operation">
+							<p>Filtro: Pasa Bajas</p>
+							<button class="button" v-on:click="f_pasaBajas">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Filtro: promedio estandar pesado</p>
+						</div>
+						<div class="inputs">
+							<div>
+								<label for="const_FPromedio">Constante N</label>
+								<input id="const_FPromedio"
+									type="number"
+									class="input_number"
+									value="2"
+									step="1"
+									min="2"
+									max="50"
+									v-model="const_N_FPromedio">
+							</div>
+							<button class="button" v-on:click="f_promedioDuro">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Filtro: Pasa Bajas Gaussiano</p>
+							<button class="button" v-on:click="f_pasaBajasGaussiano">Aplicar</button>
+						</div>
+					</li>
+
 				</ul>
 			</div>
 
