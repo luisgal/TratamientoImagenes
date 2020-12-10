@@ -779,9 +779,7 @@ let behavior_main_image = new Vue({
 		},
 
 		verify_alpha_ray: function(){
-			if( this.alpha_ray_value > 5 ){
-				this.alpha_ray_value = 5;
-			}else if( this.alpha_ray_value < 0 ){
+			if( this.alpha_ray_value < 0 ){
 				this.alpha_ray_value = 0;
 			}
 		},
@@ -879,9 +877,9 @@ let behavior_main_image = new Vue({
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i * 4;
 
-				pixels[position] = minRed + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 + cumulativeProbabilityRed[pixels[position]])) );
-				pixels[position+1] = minGreen + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 + cumulativeProbabilityGreen[pixels[position+1]])) );
-				pixels[position+2] = minBlue + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 + cumulativeProbabilityBlue[pixels[position+2]])) );
+				pixels[position] = minRed + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 - cumulativeProbabilityRed[pixels[position]])) );
+				pixels[position+1] = minGreen + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 - cumulativeProbabilityGreen[pixels[position+1]])) );
+				pixels[position+2] = minBlue + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 - cumulativeProbabilityBlue[pixels[position+2]])) );
 			}
 
 			this.context.putImageData( imageData, 0, 0 );
@@ -968,7 +966,282 @@ let behavior_main_image = new Vue({
 			this.view_button_back = true;
 
 			this.updateHistogram();	// Se actualiza el histograma
-		}
+		},
+
+		find_max: function(vecindad){
+			//Se recorre el arreglo entero una sola vez
+			let max = vecindad[0];
+			for (var i = 0; i < vecindad.length; i++) {
+				if(max < vecindad[i]){
+					//Si se encuentra un nuevo max se actualiza
+					max = vecindad[i];
+				}
+			}
+			return max;
+		},
+
+		find_min: function(vecindad){
+			//Se recorre el arreglo entero una sola vez
+			let min = vecindad[0];
+			for (var i = 0; i < vecindad.length; i++) {
+				if(min > vecindad[i]){
+					//Si se encuentra un nuevo min se actualiza
+					min = vecindad[i];
+				}
+			}
+			return min;
+		},
+
+		find_moda: function(vecindad){
+			//Ordenar de menor a mayo
+			vecindad = mergeSort(vecindad);
+			
+			//Variables auxiliares
+			let num = vecindad[0];
+			let aux = 0;
+
+			//Valores moda
+			let modas = [];
+			modas.push(vecindad[0]);
+			let max = 1;
+
+			//Se recorre una sola vez el arreglo ordenao de menor a mayor
+			for (var i = 0; i < vecindad.length; i++) {
+				//Si se encuentra un nuevo valor reinicia auxiliares
+				if(num != vecindad[i]){
+					num = vecindad[i];
+					aux = 0;
+				}
+				//Incremento en uno de aux
+				aux++;
+
+				//Si aux es mayor a max se actualiza max, esto puede indicar una nueva moda
+				if(aux > max){
+					max = aux;
+					//Si se encuentra una nueva moda se actualiza
+					if(modas[0] != num){
+						modas = [];
+						modas.push(num);
+					}
+				} else if(aux == max && modas[modas.length-1] != num){
+					//Si se encontro una nueva moda, pero con el mismo valor de la anterior se añade a modas
+					modas.push(num);
+				}
+			}
+
+			//Si existe mas de una moda, se saca el promedio de las modas
+			let moda = 0;
+			for (var i = 0; i < modas.length; i++) {
+				moda += modas[i];
+			}
+			Math.floor(moda/moda.length);
+			
+			return moda;
+		},
+
+		find_mediana: function(vecindad){
+			//Ordenar de menor a mayo
+			vecindad = mergeSort(vecindad);
+
+			//La mediana es el valor medio del arreglo ordenado de menor a mayor
+			let mediana = vecindad[Math.floor(vecindad.length/2)];
+
+			return mediana;
+		},
+
+		valorValido: function(pix, val, min, max){
+			if(val >= 0 && val<max){
+				return pix[val];
+			} else{
+				return 0;
+			}
+		},
+
+		//Canal 0:red 1:green 2:blue 3:alpha
+		getVecindad: function(pixels, position, width, canal, numP){
+			let vecindad = [];
+			let val = [0,0,0,0,0,0,0,0,0];
+			let x = 0;
+
+			// Si esta sobre la parte izquierda de la imagen
+			if(position % width == canal){
+				val[0] = x;	// f(x-1,y-1)
+				val[3] = x;	// f(x,y-1)
+				val[6] = x;	// f(x+1,y-1)
+
+				val[1] = x;	// f(x-1,y)
+				val[2] = x;	// f(x-1,y+1)
+
+				val[7] = x;	// f(x+1,y)
+				val[8] = x;	// f(x+1,y+1)
+
+				// Esquina superior izquierda
+				if(position == canal){
+					val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+					val[8] = this.valorValido(pixels,position+width+4,0,numP);	// f(x+1,y+1)
+				}
+				// Esquina inferior izquierda
+				else if(position == numP - width + canal){
+					val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+					val[2] = this.valorValido(pixels,position-width+4,0,numP);	// f(x-1,y+1)
+
+				} else{
+					val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+					val[2] = this.valorValido(pixels,position-width+4,0,numP);	// f(x-1,y+1)
+
+					val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+					val[8] = this.valorValido(pixels,position+width+4,0,numP);	// f(x+1,y+1)
+				}
+
+				val[4] = this.valorValido(pixels,position,0,numP);		// f(x,y)
+				val[5] = this.valorValido(pixels,position+4,0,numP);		// f(x,y+1)
+			} 
+			// Si esta sobre la parte derecha de la imagen
+			else if(position % width == width - 4 + canal){
+				val[2] = x;	// f(x-1,y+1)
+				val[5] = x;	// f(x,y+1)
+				val[8] = x;	// f(x+1,y+1)
+
+				val[0] = x;	// f(x-1,y-1)
+				val[1] = x;	// f(x-1,y)
+
+				val[6] = x;	// f(x+1,y-1)
+				val[7] = x;	// f(x+1,y)
+
+				// Esquina superior derecha
+				if(position == width - 4 + canal){
+					val[6] = this.valorValido(pixels,position+width-4,0,numP);	// f(x+1,y-1)
+					val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+				}
+				// Esquina inferior derecha
+				else if(position == numP - 4 + canal){
+					val[0] = this.valorValido(pixels,position-width-4,0,numP);	// f(x-1,y-1)
+					val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+
+				} else{
+					val[0] = this.valorValido(pixels,position-width-4,0,numP);	// f(x-1,y-1)
+					val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+					
+					val[6] = this.valorValido(pixels,position+width-4,0,numP);	// f(x+1,y-1)
+					val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+				}
+
+				val[3] = this.valorValido(pixels,position-4,0,numP);		// f(x,y-1)
+				val[4] = this.valorValido(pixels,position,0,numP);		// f(x,y)
+			} 
+			// Si no esta en ningun borde o esquina
+			else{
+				val[0] = this.valorValido(pixels,position-width-4,0,numP);	// f(x-1,y-1)
+				val[1] = this.valorValido(pixels,position-width,0,numP);	// f(x-1,y)
+				val[2] = this.valorValido(pixels,position-width+4,0,numP);	// f(x-1,y+1)
+				
+				val[3] = this.valorValido(pixels,position-4,0,numP);	// f(x,y-1)
+				val[4] = this.valorValido(pixels,position,0,numP);	// f(x,y)
+				val[5] = this.valorValido(pixels,position+4,0,numP);	// f(x,y+1)
+				
+				val[6] = this.valorValido(pixels,position+width-4,0,numP);	// f(x+1,y-1)
+				val[7] = this.valorValido(pixels,position+width,0,numP);	// f(x+1,y)
+				val[8] = this.valorValido(pixels,position+width+4,0,numP);	// f(x+1,y+1)
+			}
+
+			vecindad.push(val[0]);	// f(x-1,y-1)
+			vecindad.push(val[1]);	// f(x-1,y)
+			vecindad.push(val[2]);	// f(x-1,y+1)
+			vecindad.push(val[3]);	// f(x,y-1)
+			vecindad.push(val[4]);	// f(x,y)
+			vecindad.push(val[5]);	// f(x,y+1)
+			vecindad.push(val[6]);	// f(x+1,y-1)
+			vecindad.push(val[7]);	// f(x+1,y)
+			vecindad.push(val[8]);	// f(x+1,y+1)
+			
+
+			return vecindad;
+		},
+
+		f_maximo: function(){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			for( let i = 0; i < numPixels; i++ ){
+				let position = i * 4;
+
+				for (let j = 0; j < 3; j++) {
+					pixels[position + j] = this.find_max(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+				}
+			}
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma			
+		},
+
+		f_minimo: function(){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			for( let i = 0; i < numPixels; i++ ){
+				let position = i * 4;
+
+				for (let j = 0; j < 3; j++) {
+					pixels[position + j] = this.find_min(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+				}
+			}
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma			
+		},
+
+		f_moda: function(){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			for( let i = 0; i < numPixels; i++ ){
+				let position = i * 4;
+
+				for (let j = 0; j < 3; j++) {
+					pixels[position + j] = this.find_moda(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+				}
+			}
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma			
+		},
+
+		f_mediana: function(){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			for( let i = 0; i < numPixels; i++ ){
+				let position = i * 4;
+
+				for (let j = 0; j < 3; j++) {
+					pixels[position + j] = this.find_mediana(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+				}
+			}
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma			
+		},
+
 	}
 });
 
@@ -1010,3 +1283,36 @@ let behavior_main_load = new Vue({
 		}
 	}
 });
+
+function merge(left, right) {
+  	let result = [];
+    let il = 0;
+    let ir = 0;
+  
+  	while(il < left.length && ir < right.length) {
+    	if (left[il] < right[ir]) {
+	      	result.push(left[il]);
+	      	il++;
+		    //si el item del array left es menor
+		    //este se agrega a la lista y se aumenta en uno su indice (il)
+    	} else {
+	      	//si el item de right es menor este se agrega a la lista e igualmente su indice crece
+	      	result.push(right[ir]);
+	      	ir++;	
+	    }
+  	}
+  
+  	return result.concat(left.slice(il)).concat(right.slice(ir));
+}
+
+function mergeSort(items) {
+	if (items.length < 2) {
+  		return items;
+	}
+
+  	let middle = Math.floor(items.length / 2);
+    let left = items.slice(0, middle);
+    let right = items.slice(middle);
+
+  	return merge(mergeSort(left), mergeSort(right));
+}
