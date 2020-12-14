@@ -353,70 +353,115 @@
 						</div>
 					</li>
 
+				</ul>
+			</div>
+
+
+			<div class="category">
+				<div class="category_name">
+					<p>Filtros No lineales</p>
+				</div>
+				<ul class="category_list">
+
 					<li class="operator">
 						<div class="operation">
-							<p>Filtro: Maximo</p>
+							<p>Maximo</p>
 							<button class="button" v-on:click="f_maximo">Aplicar</button>
 						</div>
 					</li>
 
 					<li class="operator">
 						<div class="operation">
-							<p>Filtro: Minimo</p>
+							<p>Minimo</p>
 							<button class="button" v-on:click="f_minimo">Aplicar</button>
 						</div>
 					</li>
 
 					<li class="operator">
 						<div class="operation">
-							<p>Filtro: Mediana</p>
+							<p>Mediana</p>
 							<button class="button" v-on:click="f_mediana">Aplicar</button>
 						</div>
 					</li>
 
 					<li class="operator">
 						<div class="operation">
-							<p>Filtro: Moda</p>
+							<p>Moda</p>
 							<button class="button" v-on:click="f_moda">Aplicar</button>
-						</div>
-					</li>
-
-					<li class="operator">
-						<div class="operation">
-							<p>Filtro: Pasa Bajas</p>
-							<button class="button" v-on:click="f_pasaBajas">Aplicar</button>
-						</div>
-					</li>
-
-					<li class="operator">
-						<div class="operation">
-							<p>Filtro: promedio estandar pesado</p>
-						</div>
-						<div class="inputs">
-							<div>
-								<label for="const_FPromedio">Constante N</label>
-								<input id="const_FPromedio"
-									type="number"
-									class="input_number"
-									value="2"
-									step="1"
-									min="2"
-									max="50"
-									v-model="const_N_FPromedio">
-							</div>
-							<button class="button" v-on:click="f_promedioDuro">Aplicar</button>
-						</div>
-					</li>
-
-					<li class="operator">
-						<div class="operation">
-							<p>Filtro: Pasa Bajas Gaussiano</p>
-							<button class="button" v-on:click="f_pasaBajasGaussiano">Aplicar</button>
 						</div>
 					</li>
 
 				</ul>
 			</div>
+
+
+			<div class="category">
+				<div class="category_name">
+					<p>Filtros Pasa Bajas</p>
+				</div>
+				<ul class="category_list">
+
+					<li class="operator">
+						<div class="operation">
+							<p>Promedio</p>
+							<button class="button" v-on:click="mean">Aplicar</button>
+						</div>
+						<div class="slider">
+							<input id="size_mask_mean"
+								type="range"
+								min="3" max="9" step="2"
+								v-model:valueAsNumber="size_mask_mean_value"
+								>
+							<label for="size_mask_mean">{{size_mask_mean_value}}x{{size_mask_mean_value}}</label>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Promedio pesado</p>
+						</div>
+						<div class="inputs">
+							<div>
+								<label for="mean_hard">N</label>
+								<input id="mean_hard"
+									type="number"
+									class="input_number"
+									step="1"
+									v-model="mean_hard_value">
+							</div>
+							<button class="button" v-on:click="mean_hard">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Gaussiano</p>
+						</div>
+						<div class="inputs">
+							<div>
+								<label for="desviacion">Desviación</label>
+								<input id="desviacion"
+									type="number"
+									class="input_number"
+									min="1"
+									step="1"
+									v-model="desviacion_value">
+							</div>
+							<button class="button" v-on:click="gauss">Aplicar</button>
+						</div>
+						<div class="slider">
+							<input id="size_mask_gauss"
+								type="range"
+								min="3" max="9" step="2"
+								v-model:valueAsNumber="size_mask_gauss_value"
+								>
+							<label for="size_mask_gauss">{{size_mask_gauss_value}}x{{size_mask_gauss_value}}</label>
+						</div>
+					</li>
+
+				</ul>
+			</div>
+
 
 		</div>
 
