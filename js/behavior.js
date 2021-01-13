@@ -1032,7 +1032,7 @@ let behavior_main_image = new Vue({
 			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		convolution: function( mask, positionsNeighborhood, pixels, channel ){
+		convolution: function( mask, positionsNeighborhood, pixels ){
 			let addPartial = 0, n = 0;
 
 			for( let i = 0; i < mask.length; i++ ){
@@ -1062,7 +1062,7 @@ let behavior_main_image = new Vue({
 					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
 
 					for( let channel = 0; channel < 3; channel++ ){
-						pixels[(position*4)+channel] = Math.floor(this.convolution( mask, positionsNeighborhood, newPixels, channel ));
+						pixels[(position*4)+channel] = Math.floor(this.convolution( mask, positionsNeighborhood, newPixels ));
 					}
 				}
 			}
@@ -1364,8 +1364,132 @@ let behavior_main_image = new Vue({
 			this.view_button_back = true;
 
 			this.updateHistogram();	// Se actualiza el histograma			
+		},
+
+		convolution2: function( mask1, mask2, factor, positionsNeighborhood, pixels ){
+			let addPartial1 = 0, addPartial2 = 0;
+
+			for( let i = 0; i < mask1.length; i++ ){
+				addPartial1 += mask1[i] * pixels[positionsNeighborhood[i]];
+				addPartial2 += mask2[i] * pixels[positionsNeighborhood[i]];
+			}
+
+			addPartial1 = Math.floor( addPartial1 / factor );
+			addPartial2 = Math.floor( addPartial2 / factor );
+
+			return Math.floor( Math.sqrt( (addPartial1*addPartial1) + (addPartial2*addPartial2) ) );
+		},
+
+		sobel: function(){
+			this.to_gray();
+
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let mask1 = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+			let mask2 = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+			let factor = 4;
+
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution2( mask1, mask2, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		prewitt: function(){
+			this.to_gray();
+
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let mask1 = [-1, -1, -1, 0, 0, 0, 1, 1, 1];
+			let mask2 = [-1, 0, 1, -1, 0, 1, -1, 0, 1];
+			let factor = 3;
+
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution2( mask1, mask2, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		robert: function(){
+			this.to_gray();
+
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let mask1 = [-1, 0, 0, 0, 1, 0, 0, 0, 0];
+			let mask2 = [0, 0, -1, 0, 1, 0, 0, 0, 0];
+			let factor = 1;
+
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution2( mask1, mask2, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
 		}
 	}
+
+
 });
 
 let behavior_main_load = new Vue({

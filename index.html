@@ -365,14 +365,14 @@
 
 					<li class="operator">
 						<div class="operation">
-							<p>Maximo</p>
+							<p>Máximo</p>
 							<button class="button" v-on:click="f_maximo">Aplicar</button>
 						</div>
 					</li>
 
 					<li class="operator">
 						<div class="operation">
-							<p>Minimo</p>
+							<p>Mínimo</p>
 							<button class="button" v-on:click="f_minimo">Aplicar</button>
 						</div>
 					</li>
@@ -462,6 +462,35 @@
 				</ul>
 			</div>
 
+			<div class="category">
+				<div class="category_name">
+					<p>Filtros Pasa Altas</p>
+				</div>
+				<ul class="category_list">
+
+					<li class="operator">
+						<div class="operation">
+							<p>Sobel</p>
+							<button class="button" v-on:click="sobel">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Prewitt</p>
+							<button class="button" v-on:click="prewitt">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Robert</p>
+							<button class="button" v-on:click="robert">Aplicar</button>
+						</div>
+					</li>
+
+				</ul>
+			</div>
 
 		</div>
 
