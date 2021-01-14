@@ -1380,6 +1380,16 @@ let behavior_main_image = new Vue({
 			return Math.floor( Math.sqrt( (addPartial1*addPartial1) + (addPartial2*addPartial2) ) );
 		},
 
+		convolution3: function( mask, factor, positionsNeighborhood, pixels ){
+			let addPartial = 0;
+
+			for( let i = 0; i < mask.length; i++ ){
+				addPartial += mask[i] * pixels[positionsNeighborhood[i]];
+			}
+
+			return Math.floor( addPartial / factor );
+		},
+
 		sobel: function(){
 			this.to_gray();
 
@@ -1475,6 +1485,76 @@ let behavior_main_image = new Vue({
 					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
 
 					let conv = this.convolution2( mask1, mask2, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		laplace: function(){
+			this.to_gray();
+
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let mask = [0, 1, 0, 1, -4, 1, 0, 1, 0], factor = 4;
+			//let mask = [2, -1, -1, -1, 2, -1, -1, -1, 2], factor = 6;
+
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution3( mask, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		inverse_laplace: function(){
+			this.to_gray();
+
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let mask = [0, -1, 0, -1, 4, -1, 0, -1, 0], factor = 4;
+			//let mask = [2, -1, -1, -1, 2, -1, -1, -1, 2], factor = 6;
+
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution3( mask, factor, positionsNeighborhood, newPixels );
 
 					pixels[(position*4)] = conv;
 					pixels[(position*4)+1] = conv;
