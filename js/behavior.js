@@ -93,7 +93,10 @@ let behavior_main_image = new Vue({
 		cont_min_value: 0,
 		cont_max_value: 255,
 		alpha_ray_value: 0,
-		const_N_FPromedio: 2,
+		mean_hard_value: 0,
+		desviacion_value: 1,
+		size_mask_mean_value: 3,
+		size_mask_gauss_value: 3,
 
 		x_min: 0,
 		x_max: 0,
@@ -780,7 +783,9 @@ let behavior_main_image = new Vue({
 		},
 
 		verify_alpha_ray: function(){
-			if( this.alpha_ray_value < 0 ){
+			if( this.alpha_ray_value > 5 ){
+				this.alpha_ray_value = 5;
+			}else if( this.alpha_ray_value < 0 ){
 				this.alpha_ray_value = 0;
 			}
 		},
@@ -878,9 +883,9 @@ let behavior_main_image = new Vue({
 			for( let i = 0; i < numPixels; i++ ){
 				let position = i * 4;
 
-				pixels[position] = minRed + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 - cumulativeProbabilityRed[pixels[position]])) );
-				pixels[position+1] = minGreen + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 - cumulativeProbabilityGreen[pixels[position+1]])) );
-				pixels[position+2] = minBlue + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 - cumulativeProbabilityBlue[pixels[position+2]])) );
+				pixels[position] = minRed + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 + cumulativeProbabilityRed[pixels[position]])) );
+				pixels[position+1] = minGreen + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 + cumulativeProbabilityGreen[pixels[position+1]])) );
+				pixels[position+2] = minBlue + Math.sqrt( 2 * alpha*alpha * Math.log10(1/(1 + cumulativeProbabilityBlue[pixels[position+2]])) );
 			}
 
 			this.context.putImageData( imageData, 0, 0 );
@@ -961,6 +966,155 @@ let behavior_main_image = new Vue({
 				pixels[position] = minRed * ( maxRed / minRed ) * cumulativeProbabilityRed[pixels[position]];
 				pixels[position+1] = minGreen * ( maxGreen / minGreen ) * cumulativeProbabilityGreen[pixels[position+1]];
 				pixels[position+2] = minBlue * ( maxBlue / minBlue ) * cumulativeProbabilityBlue[pixels[position+2]];
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		getPositionsNeighborhood: function( i, j, width, height, sizeMask ){
+			let neighborhood = [];
+			let halfSizeMask = Math.floor( sizeMask / 2 );
+
+			i = i - halfSizeMask;
+			j = j - halfSizeMask;
+			let i2 = i + sizeMask;
+			let j2 = j + sizeMask;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (width * iCurrent) + jCurrent;
+					neighborhood.push( position * 4 );
+				}
+			}
+
+			return neighborhood;
+		},
+
+		meanConvolution: function( positionsNeighborhood, pixels, channel ){
+			let mean = 0;
+
+			for( let position of positionsNeighborhood ){
+				mean += pixels[position + channel];
+			}
+			mean = Math.floor( mean / positionsNeighborhood.length );
+
+			return mean;
+		},
+
+		mean: function(){	// Mediana o promedio
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let i = Math.floor(parseInt( this.size_mask_mean_value ) / 2), i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, parseInt( this.size_mask_mean_value ) );
+
+					for( let channel = 0; channel < 3; channel++ ){
+						pixels[(position*4)+channel] = Math.floor(this.meanConvolution( positionsNeighborhood, newPixels, channel ));
+					}
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		convolution: function( mask, positionsNeighborhood, pixels ){
+			let addPartial = 0, n = 0;
+
+			for( let i = 0; i < mask.length; i++ ){
+				addPartial += mask[i] * pixels[positionsNeighborhood[i]];
+				n += mask[i];
+			}
+
+			return Math.floor( addPartial / n );
+		},
+
+		mean_hard: function(){	// Media o promedio
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let mask = [1, 1, 1, 1, parseInt(this.mean_hard_value), 1, 1, 1, 1];
+
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					for( let channel = 0; channel < 3; channel++ ){
+						pixels[(position*4)+channel] = Math.floor(this.convolution( mask, positionsNeighborhood, newPixels ));
+					}
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		getMaskGauss: function(){
+			let mask = [];
+			let sizeMask = parseInt( this.size_mask_gauss_value * this.size_mask_gauss_value );
+			let range = parseInt( this.size_mask_gauss_value / 2 );
+			let desviacion = parseInt( this.desviacion_value );
+			let i = 0, norm;
+
+			for( let y = 0; y < parseInt( this.size_mask_gauss_value ); y++ ){
+				for( let x = 0; x < parseInt( this.size_mask_gauss_value ); x++ ){
+					let exponential = Math.exp( -( ((x-range)*(x-range)) + ((y-range)*(y-range)) )/(2*desviacion*desviacion) );
+					if( !i ){
+						norm = exponential;
+					}
+					mask.push( exponential );
+				}
+			}
+
+			return mask;
+		},
+
+		gauss: function(){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let mask = this.getMaskGauss();
+
+			let i = Math.floor(parseInt( this.size_mask_gauss_value ) / 2), i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, parseInt(this.size_mask_gauss_value) );
+
+					for( let channel = 0; channel < 3; channel++ ){
+						pixels[(position*4)+channel] = Math.floor(this.convolution( mask, positionsNeighborhood, newPixels, channel ));
+					}
+				}
 			}
 
 			this.context.putImageData( imageData, 0, 0 );
@@ -1212,99 +1366,210 @@ let behavior_main_image = new Vue({
 			this.updateHistogram();	// Se actualiza el histograma			
 		},
 
-		convolucion: function(vecindad, mascara){
-			let val = 0;
-			for (var i = 0; i < vecindad.length; i++) {
-				val += vecindad[i]*mascara[i];
+		convolution2: function( mask1, mask2, factor, positionsNeighborhood, pixels ){
+			let addPartial1 = 0, addPartial2 = 0;
+
+			for( let i = 0; i < mask1.length; i++ ){
+				addPartial1 += mask1[i] * pixels[positionsNeighborhood[i]];
+				addPartial2 += mask2[i] * pixels[positionsNeighborhood[i]];
 			}
-			return val;
+
+			addPartial1 = Math.floor( addPartial1 / factor );
+			addPartial2 = Math.floor( addPartial2 / factor );
+
+			return Math.floor( Math.sqrt( (addPartial1*addPartial1) + (addPartial2*addPartial2) ) );
 		},
 
-		pasaBajas: function(vecindad){
-			let mascara = [1,1,1,1,1,1,1,1,1];
-			let val = Math.floor(this.convolucion(vecindad,mascara)/9);
+		convolution3: function( mask, factor, positionsNeighborhood, pixels ){
+			let addPartial = 0;
 
-			return val;
+			for( let i = 0; i < mask.length; i++ ){
+				addPartial += mask[i] * pixels[positionsNeighborhood[i]];
+			}
+
+			return Math.floor( addPartial / factor );
 		},
 
-		promedioDuro: function(vecindad){
-			let mascara = [1,1,1,1,this.const_N_FPromedio,1,1,1,1];
-			let val = Math.floor(this.convolucion(vecindad,mascara)/this.const_N_FPromedio);
+		sobel: function(){
+			this.to_gray();
 
-			return val;
-		},
-
-		pasaBajasGaussiano: function(vecindad){
-			let mascara = [1,2,1,2,4,2,1,2,1];
-			let val = Math.floor(this.convolucion(vecindad,mascara)/16);
-
-			return val;
-		},
-
-		f_pasaBajas: function(){
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
-			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
 
 			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
-			for( let i = 0; i < numPixels; i++ ){
-				let position = i * 4;
+			let mask1 = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+			let mask2 = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+			let factor = 4;
 
-				for (let j = 0; j < 3; j++) {
-					pixels[position + j] = this.pasaBajas(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution2( mask1, mask2, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
 				}
 			}
+
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
-			
-			this.updateHistogram();	// Se actualiza el histograma			
+
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		f_promedioDuro: function(){
+		prewitt: function(){
+			this.to_gray();
+
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
-			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
 
 			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
-			for( let i = 0; i < numPixels; i++ ){
-				let position = i * 4;
+			let mask1 = [-1, -1, -1, 0, 0, 0, 1, 1, 1];
+			let mask2 = [-1, 0, 1, -1, 0, 1, -1, 0, 1];
+			let factor = 3;
 
-				for (let j = 0; j < 3; j++) {
-					pixels[position + j] = this.promedioDuro(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution2( mask1, mask2, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
 				}
 			}
+
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
-			
-			this.updateHistogram();	// Se actualiza el histograma			
+
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
-		f_pasaBajasGaussiano: function(){
+		robert: function(){
+			this.to_gray();
+
 			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
 			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
-			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
 			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
 
 			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
 
-			for( let i = 0; i < numPixels; i++ ){
-				let position = i * 4;
+			let mask1 = [-1, 0, 0, 0, 1, 0, 0, 0, 0];
+			let mask2 = [0, 0, -1, 0, 1, 0, 0, 0, 0];
+			let factor = 1;
 
-				for (let j = 0; j < 3; j++) {
-					pixels[position + j] = this.pasaBajasGaussiano(this.getVecindad(newPixels,position+j,imageData.width*4,j,numPixels*4));
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution2( mask1, mask2, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
 				}
 			}
+
 			this.context.putImageData( imageData, 0, 0 );
 			this.view_button_back = true;
-			
-			this.updateHistogram();	// Se actualiza el histograma			
+
+			this.updateHistogram();	// Se actualiza el histograma
 		},
 
+		laplace: function(){
+			this.to_gray();
+
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let mask = [0, 1, 0, 1, -4, 1, 0, 1, 0], factor = 4;
+			//let mask = [2, -1, -1, -1, 2, -1, -1, -1, 2], factor = 6;
+
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution3( mask, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		inverse_laplace: function(){
+			this.to_gray();
+
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+			let newPixels = imageData.data.slice();
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let mask = [0, -1, 0, -1, 4, -1, 0, -1, 0], factor = 4;
+			//let mask = [2, -1, -1, -1, 2, -1, -1, -1, 2], factor = 6;
+
+			let i = 1, i2 = imageData.height - i;
+			let j = i, j2 = imageData.width - i;
+
+			for( let iCurrent = i; iCurrent < i2; iCurrent++ ){
+				for( let jCurrent = j; jCurrent < j2; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsNeighborhood = this.getPositionsNeighborhood( iCurrent, jCurrent, imageData.width, imageData.height, 3 );
+
+					let conv = this.convolution3( mask, factor, positionsNeighborhood, newPixels );
+
+					pixels[(position*4)] = conv;
+					pixels[(position*4)+1] = conv;
+					pixels[(position*4)+2] = conv;
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
+		}
 	}
+
+
 });
 
 let behavior_main_load = new Vue({
