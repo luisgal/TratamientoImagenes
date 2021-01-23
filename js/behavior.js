@@ -1566,7 +1566,53 @@ let behavior_main_image = new Vue({
 			this.view_button_back = true;
 
 			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		check_rgb: function(R,G,B){
+			if((R>95) && (G>40) && (B>20)){
+				if(Math.max(R,G,B)-Math.min(R,G,B) > 15){
+					if(Math.abs(R-G) > 15){
+						if((R>G) && (R>B)){
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		},
+
+		umbral_piel: function(){	// Función para binarizar con respecto a un umbral
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;
+			let numPixels = imageData.width * imageData.height;
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			let piel = false;
+			for( let i = 0; i < numPixels; i++ ){
+				piel = this.check_rgb(pixels[i*4],pixels[i*4+1],pixels[i*4+2]);
+
+				// Se compara el valor del pixel con el del umbral en slider
+				if( piel ){
+					// En caso de que el valor del pixel sea mayor al umbral se asigna 255 en los 3 canales
+					pixels[i*4] = 255;
+					pixels[i*4+1] = 255;
+					pixels[i*4+2] = 255;
+				}else{
+					// En caso de que el valor del pixel sea menor al umbral se asigna 0 en los 3 canales
+					pixels[i*4] = 0;
+					pixels[i*4+1] = 0;
+					pixels[i*4+2] = 0;
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma
 		}
+
+
 	}
 
 
