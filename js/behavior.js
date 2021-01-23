@@ -359,7 +359,9 @@ let behavior_main_image = new Vue({
 				let b = pixels[i*4+2];	// Obtenemos el canal b del pixel
 				// Se multiplica por 4, ya que se considera rgba, por lo que el 4 valor es alpha
 
-				let gris = (r+g+b)/3;	// Obtenemos el nivel de gris a través del promedio
+				//let gris = (r+g+b)/3;	// Obtenemos el nivel de gris a través del promedio
+				//let gris = (r*0.30) + (g*0.59) + (b*0.11);
+				let gris = (r*0.33) + (g*0.52) + (b*0.15);
 
 				pixels[i*4] = gris;		// Asignamos el color gris en el canal r del pixel
 				pixels[i*4+1] = gris;	// Asignamos el color gris en el canal g del pixel
