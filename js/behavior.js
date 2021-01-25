@@ -359,7 +359,7 @@ let behavior_main_image = new Vue({
 				let b = pixels[i*4+2];	// Obtenemos el canal b del pixel
 				// Se multiplica por 4, ya que se considera rgba, por lo que el 4 valor es alpha
 
-				let gris = (r+g+b)/3;	// Obtenemos el nivel de gris a través del promedio
+				let gris = r*0.33+g*0.52+b*0.15;	// Obtenemos el nivel de gris
 
 				pixels[i*4] = gris;		// Asignamos el color gris en el canal r del pixel
 				pixels[i*4+1] = gris;	// Asignamos el color gris en el canal g del pixel
@@ -531,16 +531,9 @@ let behavior_main_image = new Vue({
 			return parseInt( pixelResul, 2 );
 		},
 
-		and_images: function(){	// Función para hacer la operación AND entre dos imágenes
-			// Obtención de la información de la primer y segunda imagen
-			let imageDataOriginal = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
-			let imageDataSecond = this.context2.getImageData( 0, 0, this.canvas2.width, this.canvas2.height );
+		and_images: function(imageDataOriginal, imageDataSecond){	// Función para hacer la operación AND entre dos imágenes
 			let pixelsOriginal = imageDataOriginal.data;
 			let pixelsSecond = imageDataSecond.data;
-			let numPixelsOriginal = imageDataOriginal.width * imageDataOriginal.height;
-			let numPixelsSecond = imageDataSecond.width * imageDataSecond.height;
-
-			this.pixels_backup = imageDataOriginal.data.slice();	// Se hace un respaldo de la información de los pixeles
 
 			// Obtención del pixel de incio y fin tanto en el eje Y cómo el eje X
 			let axes = this.getAxesIniEnd( parseInt(this.x_and_value), parseInt(this.y_and_value) );
@@ -559,6 +552,17 @@ let behavior_main_image = new Vue({
 					pixelsOriginal[indexOriginal+2] = this.and_pixel( pixelsOriginal[indexOriginal+2], pixelsSecond[indexSecond+2] );
 				}
 			}
+
+		},
+
+		and_I: function(){
+			// Obtención de la información de la primer y segunda imagen
+			let imageDataOriginal = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let imageDataSecond = this.context2.getImageData( 0, 0, this.canvas2.width, this.canvas2.height );
+			
+			this.pixels_backup = imageDataOriginal.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			this.and_images(imageDataOriginal, imageDataSecond);
 
 			this.context.putImageData( imageDataOriginal, 0, 0 );
 			this.view_button_back = true;
@@ -1574,7 +1578,7 @@ let behavior_main_image = new Vue({
 					if(Math.abs(R-G) > 15){
 						if((R>G) && (R>B)){
 							return true;
-						}
+						}	
 					}
 				}
 			}
@@ -1610,6 +1614,162 @@ let behavior_main_image = new Vue({
 			this.view_button_back = true;
 
 			this.updateHistogram();	// Se actualiza el histograma
+		},
+
+		//elementS = [[-1,0],[0,-1],[0,1],[1,0]];
+		getPositionsElement: function( x, y, width, height, elementS ){
+			let element = [];
+			let i = 0;
+			let j = 0;
+			let position = 0;
+
+			for (let k = 0; k < elementS.length; k++) {
+				i = x + elementS[k][0];
+				j = y + elementS[k][1];
+				if(i >= 0 && i < height){
+					if(j >= 0 && j < width){
+						position = (width * i) + j;
+						element.push( position * 4 );
+					}
+				}
+			}
+
+			return element;
+		},
+
+		dilatacion: function(elementS){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
+			
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			for( let iCurrent = 0; iCurrent < imageData.height; iCurrent++ ){
+				for( let jCurrent = 0; jCurrent < imageData.width; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+					let positionsElement = this.getPositionsElement( iCurrent, jCurrent, imageData.width, imageData.height, elementS);
+					let vals = [];
+					for (let k = 0; k < positionsElement.length; k++) {
+						vals.push(newPixels[positionsElement[k]]);
+					}
+					vals.push(newPixels[position*4]);
+					let max = this.find_max(vals);
+					for (let k = 0; k < positionsElement.length; k++) {
+						for( let channel = 0; channel < 3; channel++ ){
+							pixels[positionsElement[k]+channel] = max;
+						}
+					}
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma	
+		},
+
+		erosion: function(elementS){
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixels = imageData.data;	// De la información obtenida, obtenemos los pixeles para manipularlos
+			let newPixels = imageData.data.slice();	// Se hace una copia de los pixeles
+			let numPixels = imageData.width * imageData.height;	// Se calcula el número de pixeles a procesar
+
+			this.pixels_backup = imageData.data.slice();	// Se hace un respaldo de la información de los pixeles
+
+			for( let iCurrent = 0; iCurrent < imageData.height; iCurrent++ ){
+				for( let jCurrent = 0; jCurrent < imageData.width; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+
+					let positionsElement = this.getPositionsElement( iCurrent, jCurrent, imageData.width, imageData.height, elementS);
+					let vals = [];
+					for (let k = 0; k < positionsElement.length; k++) {
+						vals.push(newPixels[positionsElement[k]]);
+					}
+					vals.push(newPixels[position*4]);
+					let min = this.find_min(vals);
+					for( let channel = 0; channel < 3; channel++ ){
+						pixels[position*4+channel] = min;
+					}
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma	
+		},
+
+		apertura: function(elementS){
+			this.erosion(elementS);
+			this.dilatacion(elementS);
+		},
+
+		cierre: function(elementS){
+			this.dilatacion(elementS);
+			this.erosion(elementS);
+		},
+
+		andMancha: function(newPixels){	// Función para hacer la operación AND entre dos imágenes
+			let imageData = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height );
+			let pixelsOriginal = imageData.data;
+
+			for( let iCurrent = 0; iCurrent < imageData.height; iCurrent++ ){
+				for( let jCurrent = 0; jCurrent < imageData.width; jCurrent++ ){
+					let position = (iCurrent * imageData.width) + jCurrent;
+
+					// Asignación del resultado de la operación AND entre pixeles X,Y a nivel de bit
+					pixelsOriginal[position*4] = this.and_pixel( pixelsOriginal[position*4], newPixels[position*4] );
+					pixelsOriginal[position*4+1] = this.and_pixel( pixelsOriginal[position*4+1], newPixels[position*4+1] );
+					pixelsOriginal[position*4+2] = this.and_pixel( pixelsOriginal[position*4+2], newPixels[position*4+2] );
+				}
+			}
+
+			this.context.putImageData( imageData, 0, 0 );
+			this.view_button_back = true;
+
+			this.updateHistogram();	// Se actualiza el histograma	
+
+		},
+
+		mancha: function(){
+			let newPixels = this.context.getImageData( 0, 0, this.$refs.ref_canvas.width, this.$refs.ref_canvas.height ).data.slice();
+
+			let elementS = [];
+
+			this.umbral_piel();
+			this.to_negative();
+			this.f_moda();
+			
+			elementS = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,0]];
+			this.erosion(elementS);
+			
+			this.f_mediana();
+			this.f_moda();
+			
+			this.erosion(elementS);
+
+			elementS = [[-1,1],[0,1],[1,1],[1,0]];
+			this.cierre(elementS);
+
+			elementS = [[0,-1],[0,1],[1,0],[1,-1],[-1,1]];
+			this.dilatacion(elementS);
+			this.dilatacion(elementS);
+
+			elementS = [[-1,0],[-1,1],[0,1],[1,0]];
+			this.apertura(elementS);
+
+			elementS = [[1,0],[1,1]];
+			this.dilatacion(elementS);
+			this.dilatacion(elementS);
+
+			elementS = [[0,1],[1,0],[1,-1],[1,1]];
+			this.cierre(elementS);
+
+			elementS = [[1,0],[1,1]];
+			this.dilatacion(elementS);
+
+			this.andMancha(newPixels);
+
 		}
 
 

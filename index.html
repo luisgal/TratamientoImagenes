@@ -61,6 +61,20 @@
 
 					<li class="operator">
 						<div class="operation">
+							<p>PIEL</p>
+							<button class="button" v-on:click="umbral_piel">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>MANCHA</p>
+							<button class="button" v-on:click="mancha">Aplicar</button>
+						</div>
+					</li>
+					
+					<li class="operator">
+						<div class="operation">
 							<p>Binarizar</p>
 							<button class="button" v-on:click="to_binary">Aplicar</button>
 						</div>
@@ -78,13 +92,6 @@
 						<div class="operation">
 							<p>Escarlar a grises</p>
 							<button class="button" v-on:click="to_gray">Aplicar</button>
-						</div>
-					</li>
-
-					<li class="operator">
-						<div class="operation">
-							<p>PIEL</p>
-							<button class="button" v-on:click="umbral_piel">Aplicar</button>
 						</div>
 					</li>
 
@@ -190,7 +197,7 @@
 									v-on:change="verify_number"
 									v-model="y_and_value">
 							</div>
-							<button class="button" v-on:click="and_images">Aplicar</button>
+							<button class="button" v-on:click="and_I">Aplicar</button>
 						</div>
 					</li>
 
@@ -507,6 +514,43 @@
 						<div class="operation">
 							<p>Laplaciano con signos invertidos</p>
 							<button class="button" v-on:click="inverse_laplace">Aplicar</button>
+						</div>
+					</li>
+
+				</ul>
+			</div>
+
+			<div class="category">
+				<div class="category_name">
+					<p>Filtros Morfologicos</p>
+				</div>
+				<ul class="category_list">
+
+					<li class="operator">
+						<div class="operation">
+							<p>Dilatacion</p>
+							<button class="button" v-on:click="dilatacion">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Erosion</p>
+							<button class="button" v-on:click="erosion">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Apertura (E-D)</p>
+							<button class="button" v-on:click="apertura">Aplicar</button>
+						</div>
+					</li>
+
+					<li class="operator">
+						<div class="operation">
+							<p>Cierre (D-E)</p>
+							<button class="button" v-on:click="cierre">Aplicar</button>
 						</div>
 					</li>
 
